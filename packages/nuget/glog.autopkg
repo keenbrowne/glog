@@ -1,0 +1,78 @@
+nuget
+{
+    nuspec
+    {
+        id = bonsai.glog;
+        version : 0.3.4;
+        title: Google glog;
+        authors: { Google };
+        licenseUrl: "http://opensource.org/licenses/BSD-3-Clause";
+        projectUrl: "https://github.com/google/glog";
+        iconUrl: "https://ssl.gstatic.com/codesite/ph/images/search-48.gif"
+        requireLicenseAcceptance: false;
+        summary: @"C++ implementation of the Google logging module";
+
+        description: @"Google glog is a library that implements
+                       application-level logging.  This library provides
+                       logging APIs based on C++-style streams and various
+                       helper macros.";
+        copyright: Copyright 2015;
+        tags: { native, CoApp, glog, google glog, logging, cmake };
+    };
+
+    dependencies
+    {
+        packages : {
+            gflags/2.1.2.1,
+        };
+    }
+
+    files
+    {
+        // Create a bin path pointing to bin in the default package
+        // ('bin' puts files in a redist package)
+        defaultbin += {
+            #output {
+                package = default;
+            };
+            #add-each-file : ::nuget.[redist]targets.[${condition}].CopyToOutput;
+            #destination : ${d_bin};
+        };
+
+        // The header files are the same for each configuration so we can
+        // just copy one of the builds extracted headers
+        nestedInclude: {
+            #destination = ${d_include}\glog;
+            ".\build\x64\v120\static\glog\*";
+            "..\..\src\glog\log_severity.h";
+        };
+
+        config: {
+            #destination = ${pkg_root};
+            ".\*.cmake";
+        };
+
+        ("x64,Win32", "v120", "Debug,Release", "static,dynamic") => {
+            [${0},${1},${2},dynamic] {
+                lib: {
+                    #destination = ${build_root}\lib\${0}\${1}\dynamic\${2};
+                    ".\build\${0}\${1}\dynamic\${2}\glog.lib";
+                };
+                defaultbin: {
+                    #destination = ${build_root}\bin\${0}\${1}\dynamic\${2};
+                    ".\build\${0}\${1}\dynamic\${2}\glog.dll";
+                };
+            };
+            [${0},${1},${2},static] {
+                lib: {
+                    #destination = ${build_root}\lib\${0}\${1}\static\${2};
+                    ".\build\${0}\${1}\static\${2}\glog.lib";
+                };
+            };
+        };
+    };
+
+    targets {
+        Includes += ${pkg_root}/${d_include}; 
+    };
+}
